@@ -25,7 +25,7 @@ variable "region" {
 
 # public subnet variable
 variable "public_subnets" {
-  type = list(object({         # list of objects
+  type = list(object({ # list of objects
     cidr = string
     az   = string
     tags = map(string)

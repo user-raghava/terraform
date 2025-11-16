@@ -1,5 +1,4 @@
-# vpc
-
+# vpc creation
 resource "aws_vpc" "base" {
   cidr_block           = var.vpc_info.cidr
   enable_dns_hostnames = var.vpc_info.enable_dns_hostnames
@@ -7,6 +6,7 @@ resource "aws_vpc" "base" {
 
 }
 
+# public subnet creation
 resource "aws_subnet" "public" {
   count             = length(var.public_subnets)
   vpc_id            = aws_vpc.base.id
@@ -18,6 +18,7 @@ resource "aws_subnet" "public" {
 
 }
 
+# private subnet creation
 resource "aws_subnet" "private" {
   count             = length(var.private_subnets)
   vpc_id            = aws_vpc.base.id
@@ -29,7 +30,7 @@ resource "aws_subnet" "private" {
 
 }
 
-
+# internet gateway creation
 resource "aws_internet_gateway" "base" {
   vpc_id = aws_vpc.base.id
   tags = {
@@ -39,6 +40,7 @@ resource "aws_internet_gateway" "base" {
   depends_on = [aws_vpc.base]
 }
 
+# route tables creation
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.base.id
 
@@ -63,7 +65,7 @@ resource "aws_route_table" "public" {
 
 }
 
-
+# routes creation
 resource "aws_route" "internet" {
   route_table_id         = aws_route_table.public.id
   gateway_id             = aws_internet_gateway.base.id
@@ -72,7 +74,7 @@ resource "aws_route" "internet" {
 
 }
 
-
+# route table associations
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnets)
   route_table_id = aws_route_table.public.id
