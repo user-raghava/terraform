@@ -1,4 +1,5 @@
-# vpc creation
+# vpc
+
 resource "aws_vpc" "base" {
   cidr_block           = var.vpc_info.cidr
   enable_dns_hostnames = var.vpc_info.enable_dns_hostnames
@@ -6,35 +7,81 @@ resource "aws_vpc" "base" {
 
 }
 
-# web subnet creation
-resource "aws_subnet" "web" {
-  vpc_id            = aws_vpc.base.id # implicit dependency
-  availability_zone = var.web_subnet_info.az
-  cidr_block        = var.web_subnet_info.cidr
-  tags              = var.web_subnet_info.tags
+resource "aws_subnet" "public" {
+  count             = length(var.public_subnets)
+  vpc_id            = aws_vpc.base.id
+  availability_zone = var.public_subnets[count.index].az
+  cidr_block        = var.public_subnets[count.index].cidr
+  tags              = var.public_subnets[count.index].tags
   # explicit dependency
   depends_on = [aws_vpc.base]
 
 }
 
-# app subnet creation
-resource "aws_subnet" "app" {
-  vpc_id            = aws_vpc.base.id # implicit dependency
-  availability_zone = var.app_subnet_info.az
-  cidr_block        = var.app_subnet_info.cidr
-  tags              = var.app_subnet_info.tags
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.base.id
+  availability_zone = var.private_subnets[count.index].az
+  cidr_block        = var.private_subnets[count.index].cidr
+  tags              = var.private_subnets[count.index].tags
   # explicit dependency
   depends_on = [aws_vpc.base]
 
 }
 
-# db subnet creation
-resource "aws_subnet" "db" {
-  vpc_id            = aws_vpc.base.id # implicit dependency
-  availability_zone = var.db_subnet_info.az
-  cidr_block        = var.db_subnet_info.cidr
-  tags              = var.db_subnet_info.tags
-  # explicit dependency
-  depends_on = [aws_vpc.base]
 
+resource "aws_internet_gateway" "base" {
+  vpc_id = aws_vpc.base.id
+  tags = {
+    Name = "from-tf"
+    Env  = "Dev"
+  }
+  depends_on = [aws_vpc.base]
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.base.id
+
+  tags = {
+    Name = "private"
+    Env  = "Dev"
+  }
+
+  depends_on = [aws_subnet.private]
+
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.base.id
+
+  tags = {
+    Name = "public"
+    Env  = "Dev"
+  }
+
+  depends_on = [aws_internet_gateway.base, aws_subnet.public]
+
+}
+
+
+resource "aws_route" "internet" {
+  route_table_id         = aws_route_table.public.id
+  gateway_id             = aws_internet_gateway.base.id
+  destination_cidr_block = "0.0.0.0/0"
+  depends_on             = [aws_internet_gateway.base, aws_route_table.public]
+
+}
+
+
+resource "aws_route_table_association" "public" {
+  count          = length(var.public_subnets)
+  route_table_id = aws_route_table.public.id
+  subnet_id      = aws_subnet.public[count.index].id
+}
+
+
+resource "aws_route_table_association" "private" {
+  count          = length(var.private_subnets)
+  route_table_id = aws_route_table.private.id
+  subnet_id      = aws_subnet.private[count.index].id
 }

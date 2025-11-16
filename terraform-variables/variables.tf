@@ -1,21 +1,13 @@
-# region variable with default value
-variable "region" {
-  type    = string
-  default = "ap-south-1"
-
-}
-
-# vpc information variable
+# vpc information
 variable "vpc_info" {
-  type = object({ # vpc information as object type
+  type = object({
     cidr                 = string
-    tags                 = map(string) # tags as map type
+    tags                 = map(string)
     enable_dns_hostnames = bool
   })
   description = "vpc information"
-
-  default = { # default vpc information
-    cidr = "192.168.0.0/24"
+  default = {
+    cidr = "192.168.0.0/16"
     tags = {
       Name = "from-tf"
       Env  = "Dev"
@@ -24,58 +16,31 @@ variable "vpc_info" {
   }
 
 }
-
-# web subnet information variable
-variable "web_subnet_info" {
-  type = object({
-    cidr = string
-    az   = string
-    tags = map(string)
-  })
-  default = {
-    az   = "ap-south-1a"
-    cidr = "192.168.0.0/24"
-    tags = {
-      Name = "web"
-      Env  = "Dev"
-    }
-  }
-  description = "web subnet information"
+# region variable
+variable "region" {
+  type    = string
+  default = "ap-south-1"
 
 }
 
-# App Subnet Variables
-variable "app_subnet_info" {
-  type = object({
+# public subnet variable
+variable "public_subnets" {
+  type = list(object({         # list of objects
     cidr = string
     az   = string
     tags = map(string)
-  })
-  default = {
-    az   = "ap-south-1b"
-    cidr = "192.168.0.64/26"
-    tags = {
-      Name = "app"
-      Env  = "Dev"
-    }
-  }
-  description = "app subnet information"
+  }))
+  description = "public subnets"
+
 }
 
-# DB Subnet Variables
-variable "db_subnet_info" {
-  type = object({
+# private subnet variable
+variable "private_subnets" {
+  type = list(object({
     cidr = string
     az   = string
     tags = map(string)
-  })
-  default = {
-    az   = "ap-south-1c"
-    cidr = "192.168.0.128/26"
-    tags = {
-      Name = "db"
-      Env  = "Dev"
-    }
-  }
-  description = "db subnet information"
+  }))
+  description = "private subnets"
+
 }
