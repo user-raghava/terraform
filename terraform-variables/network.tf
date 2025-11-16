@@ -1,52 +1,72 @@
-# vpc creation
+# vpc
+
 resource "aws_vpc" "base" {
   cidr_block           = var.vpc_info.cidr
   enable_dns_hostnames = var.vpc_info.enable_dns_hostnames
   tags                 = var.vpc_info.tags
+  lifecycle {
+    create_before_destroy = true
+  }
 
 }
 
-# public subnet creation
 resource "aws_subnet" "public" {
   count             = length(var.public_subnets)
   vpc_id            = aws_vpc.base.id
   availability_zone = var.public_subnets[count.index].az
   cidr_block        = var.public_subnets[count.index].cidr
   tags              = var.public_subnets[count.index].tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   # explicit dependency
   depends_on = [aws_vpc.base]
 
 }
 
-# private subnet creation
 resource "aws_subnet" "private" {
   count             = length(var.private_subnets)
   vpc_id            = aws_vpc.base.id
   availability_zone = var.private_subnets[count.index].az
   cidr_block        = var.private_subnets[count.index].cidr
   tags              = var.private_subnets[count.index].tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   # explicit dependency
   depends_on = [aws_vpc.base]
 
 }
 
-# internet gateway creation
+
 resource "aws_internet_gateway" "base" {
   vpc_id = aws_vpc.base.id
   tags = {
     Name = "from-tf"
     Env  = "Dev"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [aws_vpc.base]
 }
 
-# route tables creation
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.base.id
 
   tags = {
     Name = "private"
     Env  = "Dev"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   depends_on = [aws_subnet.private]
@@ -61,20 +81,30 @@ resource "aws_route_table" "public" {
     Env  = "Dev"
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [aws_internet_gateway.base, aws_subnet.public]
 
 }
 
-# routes creation
+
 resource "aws_route" "internet" {
   route_table_id         = aws_route_table.public.id
   gateway_id             = aws_internet_gateway.base.id
   destination_cidr_block = "0.0.0.0/0"
-  depends_on             = [aws_internet_gateway.base, aws_route_table.public]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  depends_on = [aws_internet_gateway.base, aws_route_table.public]
+
 
 }
 
-# route table associations
+
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnets)
   route_table_id = aws_route_table.public.id
