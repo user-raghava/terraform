@@ -1,3 +1,4 @@
+# Variable definitions for Terraform configuration
 # vpc information
 variable "vpc_info" {
   type = object({
@@ -16,16 +17,17 @@ variable "vpc_info" {
   }
 
 }
-# region variable
+
+# AWS region
 variable "region" {
   type    = string
   default = "ap-south-1"
 
 }
 
-# public subnet variable
+# public subnets
 variable "public_subnets" {
-  type = list(object({ # list of objects
+  type = list(object({
     cidr = string
     az   = string
     tags = map(string)
@@ -34,7 +36,7 @@ variable "public_subnets" {
 
 }
 
-# private subnet variable
+# private subnets
 variable "private_subnets" {
   type = list(object({
     cidr = string
@@ -43,4 +45,22 @@ variable "private_subnets" {
   }))
   description = "private subnets"
 
+}
+
+# web security group information
+variable "web_security_group_info" {
+  type = object({
+    name = string
+    tags = map(string)
+    ingress_rules = list(object({ #list of maps
+      cidr_ipv4   = string
+      from_port   = number
+      ip_protocol = string # tcp/udp/icmp
+      to_port     = number
+    }))
+    egress_rules = list(object({ # egress rules
+      cidr_ipv4   = string
+      ip_protocol = string
+    }))
+  })
 }

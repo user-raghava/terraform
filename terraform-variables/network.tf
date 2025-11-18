@@ -1,5 +1,4 @@
 # vpc
-
 resource "aws_vpc" "base" {
   cidr_block           = var.vpc_info.cidr
   enable_dns_hostnames = var.vpc_info.enable_dns_hostnames
@@ -10,6 +9,7 @@ resource "aws_vpc" "base" {
 
 }
 
+# public subnets
 resource "aws_subnet" "public" {
   count             = length(var.public_subnets)
   vpc_id            = aws_vpc.base.id
@@ -26,6 +26,7 @@ resource "aws_subnet" "public" {
 
 }
 
+# private subnets
 resource "aws_subnet" "private" {
   count             = length(var.private_subnets)
   vpc_id            = aws_vpc.base.id
@@ -42,7 +43,7 @@ resource "aws_subnet" "private" {
 
 }
 
-
+# internet gateway
 resource "aws_internet_gateway" "base" {
   vpc_id = aws_vpc.base.id
   tags = {
@@ -57,6 +58,8 @@ resource "aws_internet_gateway" "base" {
   depends_on = [aws_vpc.base]
 }
 
+# route tables
+# private route table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.base.id
 
@@ -73,6 +76,7 @@ resource "aws_route_table" "private" {
 
 }
 
+# public route table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.base.id
 
@@ -89,7 +93,7 @@ resource "aws_route_table" "public" {
 
 }
 
-
+# route for internet access in public route table
 resource "aws_route" "internet" {
   route_table_id         = aws_route_table.public.id
   gateway_id             = aws_internet_gateway.base.id
@@ -104,16 +108,43 @@ resource "aws_route" "internet" {
 
 }
 
-
+# route table associations
+# public
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnets)
   route_table_id = aws_route_table.public.id
   subnet_id      = aws_subnet.public[count.index].id
 }
 
-
+# private
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnets)
   route_table_id = aws_route_table.private.id
   subnet_id      = aws_subnet.private[count.index].id
+}
+
+# security groups web
+# parent
+resource "aws_security_group" "web" {
+  vpc_id = aws_vpc.base.id
+  tags   = var.web_security_group_info.tags
+
+}
+
+# child ingress rules
+resource "aws_vpc_security_group_ingress_rule" "web_rules" {
+  count             = length(var.web_security_group_info.ingress_rules)
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = var.web_security_group_info.ingress_rules[count.index].cidr_ipv4
+  from_port         = var.web_security_group_info.ingress_rules[count.index].from_port
+  ip_protocol       = var.web_security_group_info.ingress_rules[count.index].ip_protocol
+  to_port           = var.web_security_group_info.ingress_rules[count.index].to_port
+}
+
+# child egress rules
+resource "aws_vpc_security_group_egress_rule" "web_rules" {
+  count             = length(var.web_security_group_info.egress_rules)
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = var.web_security_group_info.egress_rules[count.index].cidr_ipv4
+  ip_protocol       = var.web_security_group_info.egress_rules[count.index].ip_protocol
 }
