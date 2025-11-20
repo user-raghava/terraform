@@ -20,3 +20,14 @@ variable "primary_network_info" {
     }))
   })
 }
+
+variable "secondary_network_info" {
+  type = object({
+    name = string
+    cidr = optional(string, "10.11.0.0/16")
+    subnets = list(object({
+      name = string
+      cidr = string
+    }))
+    })
+}
