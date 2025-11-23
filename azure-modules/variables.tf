@@ -3,10 +3,13 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  type    = string
+  type = string
 }
 
 
-variable "primary_location" {
-  type = string
+variable "location" {
+  type = object({
+    primary   = string
+    secondary = string
+  })
 }

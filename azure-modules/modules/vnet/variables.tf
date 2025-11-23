@@ -22,7 +22,7 @@ variable "network_info" {
 }
 
 # required argument
-variable "public_subnets" {
+variable "vnet_subnets" {
   type = list(object({
     name = string
     cidr = string

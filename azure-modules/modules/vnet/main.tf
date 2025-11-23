@@ -9,9 +9,9 @@ resource "azurerm_virtual_network" "base" {
 
 resource "azurerm_subnet" "subnets" {
 
-  count                = length(var.public_subnets)
-  name                 = var.public_subnets[count.index].name
-  address_prefixes     = [var.public_subnets[count.index].cidr]
+  count                = length(var.vnet_subnets)
+  name                 = var.vnet_subnets[count.index].name
+  address_prefixes     = [var.vnet_subnets[count.index].cidr]
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.base.name
 
