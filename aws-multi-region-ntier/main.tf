@@ -35,3 +35,67 @@ module "secondary_vpc" {
 
   private_subnets = var.secondary_private_subnets
 }
+
+module "primary_sg" {
+  source = "./modules/sg"
+  providers = {
+    aws = aws.primary
+  }
+
+  name   = "web-sg"
+  vpc_id = module.primary_vpc.vpc_id
+
+  ingress_rules = [
+    {
+      description = "HTTP"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    },
+    {
+      description = "SSH"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  ]
+
+  tags = {
+    Name        = "Web SG"
+    Environment = "dev"
+  }
+}
+
+module "secondary_sg" {
+  source = "./modules/sg"
+  providers = {
+    aws = aws.secondary
+  }
+
+  name   = "web-sg"
+  vpc_id = module.secondary_vpc.vpc_id
+
+  ingress_rules = [
+    {
+      description = "HTTP"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    },
+    {
+      description = "SSH"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  ]
+
+  tags = {
+    Name        = "Web SG"
+    Environment = "dev"
+  }
+}
