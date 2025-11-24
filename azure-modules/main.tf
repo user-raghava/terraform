@@ -34,7 +34,7 @@ module "secondary_vnet" {
 }
 
 module "primary_web_nsg" {
-  source              = "./modules/sg"
+  source              = "./modules/nsg"
   resource_group_name = azurerm_resource_group.base.name
   location            = var.location.primary
   name                = "web_nsg_primary"
@@ -43,7 +43,7 @@ module "primary_web_nsg" {
     priority               = 300
     direction              = "Inbound"
     source_address_prefix  = "*"
-    source_port_range      = "80"
+    source_port_range      = "*"
     destination_port_range = "80"
     access                 = "Allow"
     }, {
@@ -51,7 +51,7 @@ module "primary_web_nsg" {
     priority               = 310
     direction              = "Inbound"
     source_address_prefix  = "*"
-    source_port_range      = "22"
+    source_port_range      = "*"
     destination_port_range = "22"
     access                 = "Allow"
   }]
@@ -60,7 +60,7 @@ module "primary_web_nsg" {
 }
 
 module "secondary_web_nsg" {
-  source              = "./modules/sg"
+  source              = "./modules/nsg"
   resource_group_name = azurerm_resource_group.base.name
   location            = var.location.secondary
   name                = "web_nsg_secondary"
@@ -77,10 +77,24 @@ module "secondary_web_nsg" {
     priority               = 310
     direction              = "Inbound"
     source_address_prefix  = "*"
-    source_port_range      = "22"
+    source_port_range      = "*"
     destination_port_range = "22"
     access                 = "Allow"
   }]
   depends_on = [azurerm_resource_group.base]
+
+}
+
+module "primary_vm" {
+  source              = "./modules/linux-vm"
+  public_ip_name      = "primaryweb"
+  nic_name            = "primarywebnic"
+  ssh_key_location    = "~/.ssh/id_ed25519.pub"
+  username            = "dell"
+  vm_name             = "web-1"
+  resource_group_name = azurerm_resource_group.base.name
+  subnet_id           = module.primary_vnet.subnet_ids[0]
+  location            = var.location.primary
+  nsg_id              = module.primary_web_nsg.id
 
 }

@@ -8,7 +8,7 @@ variable "vpc_id" {
 
 variable "ingress_rules" {
   type = list(object({
-    description = optional(string)
+    description = string
     cidr_ipv4   = string
     from_port   = number
     protocol = string # tcp/udp/icmp
@@ -18,7 +18,7 @@ variable "ingress_rules" {
 
 variable "egress_rules" {
   type = list(object({
-    description = optional(string)
+    description = string
     protocol = string
     cidr_ipv4   = string
   }))
