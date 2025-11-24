@@ -11,7 +11,7 @@ variable "ingress_rules" {
     description = string
     cidr_ipv4   = string
     from_port   = number
-    protocol = string # tcp/udp/icmp
+    protocol    = string # tcp/udp/icmp
     to_port     = number
   }))
 }
@@ -19,13 +19,13 @@ variable "ingress_rules" {
 variable "egress_rules" {
   type = list(object({
     description = string
-    protocol = string
+    protocol    = string
     cidr_ipv4   = string
   }))
   default = [
     {
       description = "Allow all outbound traffic"
-      protocol = "-1"
+      protocol    = "-1"
       cidr_ipv4   = "0.0.0.0/0"
     }
   ]

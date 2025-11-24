@@ -99,3 +99,22 @@ module "secondary_sg" {
     Environment = "dev"
   }
 }
+
+module "web_server" {
+  source = "./modules/ec2"
+  providers = {
+    aws = aws.primary
+  }
+  name                = "web-server"
+  instance_type       = "t2.micro"
+  subnet_id           = module.primary_vpc.public_subnet_ids[0]
+  security_group_ids  = [module.primary_sg.sg_id]
+  associate_public_ip = true
+  key_name            = "my-ec2-key"
+  root_volume_size    = 20
+  root_volume_type    = "gp2"
+  tags = {
+    Name        = "Web Server"
+    Environment = "dev"
+  }
+}
