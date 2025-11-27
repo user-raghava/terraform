@@ -9,25 +9,6 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# TLS private key resource for EC2 key pair
-resource "tls_private_key" "ec2_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-# AWS key pair resource using the generated TLS private key
-resource "aws_key_pair" "ec2_key" {
-  key_name   = var.key_name
-  public_key = tls_private_key.ec2_key.public_key_openssh
-}
-
-# Local file resource to save the private key securely
-resource "local_file" "private_key" {
-  content         = tls_private_key.ec2_key.private_key_pem
-  filename        = "${path.module}/my-ec2-key.pem"  # Save in module directory
-  file_permission = "0400"
-}
-
 # EC2 instance resource
 resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux.id
@@ -35,7 +16,8 @@ resource "aws_instance" "web_server" {
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = var.security_group_ids
   associate_public_ip_address = var.associate_public_ip
-  key_name                    = aws_key_pair.ec2_key.key_name
+  key_name                    = var.key_name
+  user_data                   = var.user_data
 
 
   root_block_device {
@@ -47,5 +29,26 @@ resource "aws_instance" "web_server" {
   tags = var.tags
 }
 
+# Provisioner to install software on the EC2 instance after creation
+resource "null_resource" "install_software" {
+  triggers = {
+    always_run = timestamp() # Force re-provisioning on every terraform apply
+  }
 
+  connection { # SSH connection details to the EC2 instance
+    type        = "ssh"
+    host        = aws_instance.web_server.public_ip
+    user        = "ec2-user"
+    private_key = file("~/.ssh/id_ed25519") # Path to your private key file
+  }
 
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum install -y httpd", # Install Apache HTTP server
+      "sudo systemctl start httpd",
+      "sudo systemctl enable httpd",
+      "sudo yum install tree -y"
+
+    ]
+  }
+}

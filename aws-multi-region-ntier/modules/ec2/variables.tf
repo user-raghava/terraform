@@ -37,3 +37,7 @@ variable "root_volume_type" {
 variable "tags" {
   type = map(string)
 }
+
+variable "user_data" {
+  type = string
+}

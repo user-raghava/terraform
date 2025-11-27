@@ -1,10 +1,21 @@
-variable "vpc_cidrs" {
+variable "primary_vpc_info" {
   type = object({
-    primary   = string
-    secondary = string
+    cidr                 = string
+    enable_dns_hostnames = bool
+    tags                 = map(string)
   })
 
 }
+
+variable "secondary_vpc_info" {
+  type = object({
+    cidr                 = string
+    enable_dns_hostnames = bool
+    tags                 = map(string)
+  })
+
+}
+
 
 variable "region" {
   type = object({
@@ -45,4 +56,8 @@ variable "secondary_private_subnets" {
     cidr = string
     tags = map(string)
   }))
+}
+
+variable "key_path" {
+  type = string
 }
