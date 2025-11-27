@@ -17,10 +17,18 @@ terraform {
 provider "aws" {
   alias  = "primary"          # alias for primary provider
   region = var.region.primary # use primary region from variables
+  default_tags {
+    tags = {                      # tag to identify the environment (workspace name)
+      Env = terraform.workspace   # built-in Terraform variable
+    }
+  }
 }
 
 provider "aws" {
   alias  = "secondary"
   region = var.region.secondary
-
+  default_tags {
+    tags = {
+      Env = terraform.workspace
+    }}
 }
