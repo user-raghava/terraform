@@ -48,3 +48,7 @@ variable "nsg_id" {
   type = string
 
 }
+
+variable "custom_data" {
+  type = string
+}
